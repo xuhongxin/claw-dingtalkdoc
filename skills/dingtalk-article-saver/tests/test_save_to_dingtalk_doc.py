@@ -1,6 +1,8 @@
 from pathlib import Path
 import importlib.util
 
+import pytest
+
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "save_to_dingtalk_doc.py"
 SPEC = importlib.util.spec_from_file_location("save_to_dingtalk_doc", MODULE_PATH)
@@ -36,7 +38,7 @@ def test_render_markdown_contains_required_sections():
         summary="这是文章概述。",
         body="这是文章正文。",
         source_url="https://example.com/post",
-        source_language="en",
+        source_language="zh",
         fetched_at="2026-03-16 10:00",
     )
 
@@ -49,7 +51,50 @@ def test_render_markdown_contains_required_sections():
     assert "这是文章正文。" in rendered
     assert "## 文章引用来源" in rendered
     assert "https://example.com/post" in rendered
-    assert "英文" in rendered
+    assert "中文" in rendered
+
+
+def test_prepare_body_for_save_requires_translation_for_english_articles():
+    with pytest.raises(ValueError, match="translated Chinese body"):
+        MODULE.prepare_body_for_save(
+            body="This is an English article body.",
+            source_language="en",
+        )
+
+
+def test_prepare_body_for_save_uses_translated_body_for_english_articles():
+    translated = MODULE.prepare_body_for_save(
+        body="This is an English article body.",
+        source_language="en",
+        translated_body="这是一篇英文文章翻译后的中文正文。",
+    )
+
+    assert translated == "这是一篇英文文章翻译后的中文正文。"
+
+
+def test_prepare_body_for_save_rejects_non_chinese_translation_for_english_articles():
+    with pytest.raises(ValueError, match="must contain Chinese"):
+        MODULE.prepare_body_for_save(
+            body="This is an English article body.",
+            source_language="en",
+            translated_body="Still English content",
+        )
+
+
+def test_render_markdown_uses_translated_body_for_english_articles():
+    rendered = MODULE.render_markdown(
+        title="AI 生成标题",
+        tags=["AI"],
+        summary="中文概述。",
+        body="This is an English article body.",
+        translated_body="这是翻译后的中文正文。",
+        source_url="https://example.com/post",
+        source_language="en",
+        fetched_at="2026-03-16 10:00",
+    )
+
+    assert "这是翻译后的中文正文。" in rendered
+    assert "This is an English article body." not in rendered
 
 
 def test_build_create_folder_request_uses_fixed_folder_name():

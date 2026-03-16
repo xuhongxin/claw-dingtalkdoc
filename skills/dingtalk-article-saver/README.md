@@ -17,12 +17,17 @@ OpenClaw skill for saving web articles into DingTalk Docs.
 - `scripts/save_to_dingtalk_doc.py`: extraction and DingTalk persistence helper
 - `tests/test_save_to_dingtalk_doc.py`: unit tests
 
-## Environment
+## Configuration
 
-Set:
+Do not ask the user to run an `export` command after skill installation.
 
-```bash
-export DINGTALK_DOC_MCP_ENDPOINT='https://mcp-gw.dingtalk.com/server/...'
+When a save action actually needs DingTalk Docs access and the current conversation does not yet contain a usable MCP StreamableHttp URL, prompt the user with:
+
+```text
+1. 登录：https://mcp.dingtalk.com/
+2. 点击“钉钉文档”
+3. 复制 StreamableHttp URL
+4. 粘贴到当前对话；完成配置
 ```
 
 Dependencies:
@@ -43,6 +48,7 @@ Save a prepared Markdown document:
 
 ```bash
 python3 skills/dingtalk-article-saver/scripts/save_to_dingtalk_doc.py save \
+  --endpoint "https://mcp-gw.dingtalk.com/server/..." \
   --title "AI 生成的标题" \
   --markdown "# AI 生成的标题\n\n## 文章分类标签\n- AI"
 ```
@@ -50,4 +56,4 @@ python3 skills/dingtalk-article-saver/scripts/save_to_dingtalk_doc.py save \
 ## Notes
 
 - The helper caches the DingTalk folder id in `skills/dingtalk-article-saver/.state.json`.
-- The MCP endpoint is intentionally externalized via environment variable instead of being committed into the repository.
+- The MCP endpoint should be collected from the user during the save flow instead of being preconfigured during installation.

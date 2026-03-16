@@ -141,7 +141,24 @@ class DingTalkDocClient:
         return self.call(self.build_create_document_request(title, folder_id, markdown))
 
 
-def render_markdown(title, tags, summary, body, source_url, source_language, fetched_at):
+def contains_chinese(text):
+    return bool(re.search(r"[\u4e00-\u9fff]", (text or "").strip()))
+
+
+def prepare_body_for_save(body, source_language, translated_body=None):
+    body = (body or "").strip()
+    translated_body = (translated_body or "").strip()
+    if source_language == "en":
+        if not translated_body:
+            raise ValueError("English articles require a translated Chinese body before saving.")
+        if not contains_chinese(translated_body):
+            raise ValueError("Translated body must contain Chinese content before saving.")
+        return translated_body
+    return body
+
+
+def render_markdown(title, tags, summary, body, source_url, source_language, fetched_at, translated_body=None):
+    final_body = prepare_body_for_save(body, source_language, translated_body=translated_body)
     tag_lines = "\n".join(f"- {tag}" for tag in tags)
     language_label = {"zh": "中文", "en": "英文"}.get(source_language, source_language)
     return f"""# {title}
@@ -153,7 +170,7 @@ def render_markdown(title, tags, summary, body, source_url, source_language, fet
 {summary}
 
 ## 文章正文
-{body}
+{final_body}
 
 ## 文章引用来源
 - 原始链接: {source_url}
@@ -175,7 +192,7 @@ def ensure_target_folder(client, store, folder_name=FIXED_FOLDER_NAME):
 def resolve_endpoint(explicit_endpoint=None):
     endpoint = explicit_endpoint or os.environ.get("DINGTALK_DOC_MCP_ENDPOINT")
     if not endpoint:
-        raise ValueError("Missing MCP endpoint. Provide --endpoint or set DINGTALK_DOC_MCP_ENDPOINT.")
+        raise ValueError("Missing MCP endpoint. Provide --endpoint.")
     return endpoint
 
 

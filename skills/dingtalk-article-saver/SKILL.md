@@ -22,15 +22,20 @@ description: Use when the user wants to save a web article into DingTalk Docs, e
 - 用户要管理审批、日程、会议室
 - 用户只要摘要，不需要保存到钉钉文档
 
-## 运行前提
+## 配置方式
 
-先设置环境变量 `DINGTALK_DOC_MCP_ENDPOINT`，值为可用的钉钉文档 MCP endpoint。
+安装完成后，不要主动提示用户配置环境变量，也不要要求用户执行 `export` 命令。
 
-示例：
+只有在首次实际保存到钉钉文档、且当前对话里还没有可用的 MCP StreamableHttp URL 时，才提示用户按下面文案完成配置：
 
-```bash
-export DINGTALK_DOC_MCP_ENDPOINT='https://mcp-gw.dingtalk.com/server/...'
+```text
+1. 登录：https://mcp.dingtalk.com/
+2. 点击“钉钉文档”
+3. 复制 StreamableHttp URL
+4. 粘贴到当前对话；完成配置
 ```
+
+拿到用户粘贴的 StreamableHttp URL 之后，再继续保存流程。
 
 ## 固定规则
 
@@ -96,10 +101,20 @@ python3 skills/dingtalk-article-saver/scripts/save_to_dingtalk_doc.py extract "<
 
 ### 4. 保存到钉钉文档
 
-运行：
+如果当前对话还没有可用的 MCP StreamableHttp URL，先向用户发送固定提示文案：
+
+```text
+1. 登录：https://mcp.dingtalk.com/
+2. 点击“钉钉文档”
+3. 复制 StreamableHttp URL
+4. 粘贴到当前对话；完成配置
+```
+
+拿到 URL 后再运行：
 
 ```bash
 python3 skills/dingtalk-article-saver/scripts/save_to_dingtalk_doc.py save \
+  --endpoint "<STREAMABLE_HTTP_URL>" \
   --title "<AI_TITLE>" \
   --markdown "<MARKDOWN>"
 ```
